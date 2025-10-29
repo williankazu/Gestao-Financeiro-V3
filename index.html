@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -56,6 +58,54 @@
                 </div>
             </div>
 
+            <!-- Filtros de Período -->
+            <div class="filter-section">
+                <h3 class="title is-5 mb-4">
+                    <i class="fas fa-filter"></i> Filtros por Período
+                </h3>
+                <div class="filter-buttons">
+                    <button class="button filter-btn is-active" onclick="filtrarPorPeriodo('todos')" id="btn-todos">
+                        <span class="icon"><i class="fas fa-infinity"></i></span>
+                        <span>Todos</span>
+                    </button>
+                    <button class="button filter-btn" onclick="filtrarPorPeriodo('hoje')" id="btn-hoje">
+                        <span class="icon"><i class="fas fa-calendar-day"></i></span>
+                        <span>Hoje</span>
+                    </button>
+                    <button class="button filter-btn" onclick="filtrarPorPeriodo('semana')" id="btn-semana">
+                        <span class="icon"><i class="fas fa-calendar-week"></i></span>
+                        <span>Semana</span>
+                    </button>
+                    <button class="button filter-btn" onclick="filtrarPorPeriodo('mes')" id="btn-mes">
+                        <span class="icon"><i class="fas fa-calendar-alt"></i></span>
+                        <span>Mês</span>
+                    </button>
+                    <button class="button filter-btn" onclick="filtrarPorPeriodo('ano')" id="btn-ano">
+                        <span class="icon"><i class="fas fa-calendar"></i></span>
+                        <span>Ano</span>
+                    </button>
+                </div>
+                <div class="date-inputs">
+                    <div class="field">
+                        <label class="label">Data Inicial</label>
+                        <div class="control">
+                            <input class="input" type="date" id="dataInicial" onchange="filtrarPorPeriodoCustomizado()">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Data Final</label>
+                        <div class="control">
+                            <input class="input" type="date" id="dataFinal" onchange="filtrarPorPeriodoCustomizado()">
+                        </div>
+                    </div>
+                </div>
+                <div class="has-text-centered mt-3">
+                    <span class="tag is-info is-light is-medium" id="periodoAtivo">
+                        <i class="fas fa-info-circle"></i> &nbsp; Exibindo todas as transações
+                    </span>
+                </div>
+            </div>
+
             <!-- Charts Dashboard -->
             <div class="columns is-multiline mt-4">
                 <div class="column is-12-mobile is-6-tablet">
@@ -94,33 +144,126 @@
                         </div>
                     </div>
                 </div>
+                <div class="column is-12-mobile is-6-tablet">
+                    <div class="card">
+                        <div class="card-content">
+                            <h3 class="title is-5 has-text-centered">
+                                <i class="fas fa-credit-card"></i> Formas de Pagamento
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="paymentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet">
+                    <div class="card">
+                        <div class="card-content">
+                            <h3 class="title is-5 has-text-centered">
+                                <i class="fas fa-chart-line"></i> Resumo do Período
+                            </h3>
+                            <div class="content" id="resumoPeriodo">
+                                <p class="has-text-centered">Selecione um período para ver o resumo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-12">
+                    <div class="card">
+                        <div class="card-content">
+                            <h3 class="title is-5 has-text-centered">
+                                <i class="fas fa-chart-line"></i> Tendência de Gastos (Últimos 30 Dias)
+                            </h3>
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="card">
                 <div class="card-content">
-                    <div class="btn-group">
-                        <button class="button is-success" onclick="openModal('add')">
-                            <span class="icon"><i class="fas fa-plus"></i></span>
-                            <span>Nova Transação</span>
-                        </button>
-                        <button class="button is-info" onclick="exportarCSV()">
-                            <span class="icon"><i class="fas fa-file-csv"></i></span>
-                            <span>Exportar CSV</span>
-                        </button>
-                        <button class="button is-link" onclick="exportarExcel()">
-                            <span class="icon"><i class="fas fa-file-excel"></i></span>
-                            <span>Exportar Excel</span>
-                        </button>
-                        <button class="button is-warning" onclick="document.getElementById('importFile').click()">
-                            <span class="icon"><i class="fas fa-file-import"></i></span>
-                            <span>Importar</span>
-                        </button>
-                        <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarArquivo(event)">
-                        <button class="button is-danger" onclick="limparDados()">
-                            <span class="icon"><i class="fas fa-trash"></i></span>
-                            <span>Limpar Tudo</span>
-                        </button>
+                    <div class="columns is-multiline">
+                        <div class="column is-12-mobile is-6-tablet">
+                            <div class="field search-box">
+                                <label class="label">
+                                    <i class="fas fa-search"></i> Buscar Transações
+                                </label>
+                                <div class="control has-icons-left">
+                                    <input class="input" type="text" id="searchInput" placeholder="Buscar por descrição, categoria..." onkeyup="buscarTransacoes()">
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-12">
+                            <div class="btn-group">
+                                <button class="button is-success" onclick="openModal('add')">
+                                    <span class="icon"><i class="fas fa-plus"></i></span>
+                                    <span>Nova Transação</span>
+                                </button>
+                                <button class="button is-primary" onclick="openModalMetas()">
+                                    <span class="icon"><i class="fas fa-bullseye"></i></span>
+                                    <span>Metas</span>
+                                </button>
+                                <button class="button is-warning" onclick="openModalOrcamento()">
+                                    <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                                    <span>Orçamento</span>
+                                </button>
+                                <button class="button is-info" onclick="exportarCSV()">
+                                    <span class="icon"><i class="fas fa-file-csv"></i></span>
+                                    <span>CSV</span>
+                                </button>
+                                <button class="button is-link" onclick="exportarExcel()">
+                                    <span class="icon"><i class="fas fa-file-excel"></i></span>
+                                    <span>Excel</span>
+                                </button>
+                                <button class="button is-info" onclick="exportarPDF()">
+                                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                                    <span>PDF</span>
+                                </button>
+                                <button class="button is-warning" onclick="document.getElementById('importFile').click()">
+                                    <span class="icon"><i class="fas fa-file-import"></i></span>
+                                    <span>Importar</span>
+                                </button>
+                                <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarArquivo(event)">
+                                <button class="button is-danger" onclick="limparDados()">
+                                    <span class="icon"><i class="fas fa-trash"></i></span>
+                                    <span>Limpar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metas e Orçamento -->
+            <div class="columns is-multiline mt-4">
+                <div class="column is-12-mobile is-6-tablet">
+                    <div class="card">
+                        <div class="card-content">
+                            <h3 class="title is-5">
+                                <i class="fas fa-bullseye"></i> Metas Financeiras
+                            </h3>
+                            <div id="metasContainer">
+                                <p class="has-text-centered has-text-grey">Nenhuma meta definida. Clique em "Metas" para adicionar.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-12-mobile is-6-tablet">
+                    <div class="card">
+                        <div class="card-content">
+                            <h3 class="title is-5">
+                                <i class="fas fa-chart-bar"></i> Orçamento por Categoria
+                            </h3>
+                            <div id="orcamentoContainer">
+                                <p class="has-text-centered has-text-grey">Nenhum orçamento definido. Clique em "Orçamento" para configurar.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,6 +281,7 @@
                                     <th>Data</th>
                                     <th>Descrição</th>
                                     <th>Categoria</th>
+                                    <th>Pagamento</th>
                                     <th>Tipo</th>
                                     <th>Valor</th>
                                     <th>Ações</th>
@@ -145,7 +289,7 @@
                             </thead>
                             <tbody id="transactionsTable">
                                 <tr>
-                                    <td colspan="6" class="has-text-centered">
+                                    <td colspan="7" class="has-text-centered">
                                         Nenhuma transação registrada
                                     </td>
                                 </tr>
@@ -211,6 +355,21 @@
                 </div>
 
                 <div class="field">
+                    <label class="label">Forma de Pagamento</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select id="formaPagamento">
+                                <option value="Dinheiro">💵 Dinheiro</option>
+                                <option value="PIX">📱 PIX</option>
+                                <option value="Débito">💳 Débito</option>
+                                <option value="Crédito">💳 Crédito</option>
+                                <option value="Crediário">📋 Crediário</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
                     <label class="label">Valor</label>
                     <div class="control has-icons-left">
                         <input class="input" type="number" id="valor" placeholder="0.00" step="0.01" min="0">
@@ -234,11 +393,94 @@
         </div>
     </div>
 
+    <!-- Modal Metas Financeiras -->
+    <div class="modal" id="metasModal">
+        <div class="modal-background" onclick="closeModalMetas()"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title"><i class="fas fa-bullseye"></i> Gerenciar Metas Financeiras</p>
+                <button class="delete" aria-label="close" onclick="closeModalMetas()"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Nome da Meta</label>
+                    <div class="control">
+                        <input class="input" type="text" id="metaNome" placeholder="Ex: Viagem, Carro, Reserva de Emergência...">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Valor da Meta (R$)</label>
+                    <div class="control">
+                        <input class="input" type="number" id="metaValor" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Data Limite</label>
+                    <div class="control">
+                        <input class="input" type="date" id="metaData">
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" onclick="salvarMeta()">Adicionar Meta</button>
+                <button class="button" onclick="closeModalMetas()">Cancelar</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Orçamento -->
+    <div class="modal" id="orcamentoModal">
+        <div class="modal-background" onclick="closeModalOrcamento()"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title"><i class="fas fa-chart-bar"></i> Configurar Orçamento por Categoria</p>
+                <button class="delete" aria-label="close" onclick="closeModalOrcamento()"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Categoria</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select id="orcamentoCategoria">
+                                <option value="Alimentação">Alimentação</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Moradia">Moradia</option>
+                                <option value="Saúde">Saúde</option>
+                                <option value="Educação">Educação</option>
+                                <option value="Lazer">Lazer</option>
+                                <option value="Compras">Compras</option>
+                                <option value="Contas">Contas</option>
+                                <option value="Outros Gastos">Outros Gastos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Limite Mensal (R$)</label>
+                    <div class="control">
+                        <input class="input" type="number" id="orcamentoValor" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" onclick="salvarOrcamento()">Salvar Orçamento</button>
+                <button class="button" onclick="closeModalOrcamento()">Cancelar</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button class="button is-dark dark-mode-toggle" onclick="toggleDarkMode()" title="Alternar Modo Escuro">
+        <span class="icon is-large">
+            <i class="fas fa-moon fa-2x" id="darkModeIcon"></i>
+        </span>
+    </button>
+
     <!-- Footer -->
     <footer class="footer mt-6">
         <div class="content has-text-centered">
             <p>
-                <strong>Gestão Financeira</strong> - Desenvolvido WK
+                <strong>Gestão Financeira</strong> - Desenvolvido com WK
                 <i class="fas fa-heart" style="color: #f14668;"></i>
             </p>
         </div>

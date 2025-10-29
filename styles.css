@@ -120,4 +120,144 @@
             padding: 1.5rem;
             margin-bottom: 1rem;
         }
+        
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-btn {
+            flex: 1;
+            min-width: 100px;
+        }
+        
+        .filter-btn.is-active {
+            background-color: #667eea !important;
+            color: white !important;
+        }
+        
+        .date-inputs {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .date-inputs .field {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .filter-btn {
+                min-width: 80px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Dark Mode */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .card,
+        body.dark-mode .filter-section,
+        body.dark-mode .modal-card-body,
+        body.dark-mode .modal-card-head,
+        body.dark-mode .modal-card-foot {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .table {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+        
+        body.dark-mode .table th,
+        body.dark-mode .table td {
+            border-color: #404040;
+        }
+        
+        body.dark-mode .input,
+        body.dark-mode .select select {
+            background-color: #3d3d3d;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+        
+        body.dark-mode .footer {
+            background-color: #2d2d2d;
+        }
+        
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* Progress bars */
+        .budget-progress {
+            margin-top: 0.5rem;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Search box */
+        .search-box {
+            margin-bottom: 1rem;
+        }
+        
+        /* Goals */
+        .goal-card {
+            border-left: 4px solid #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .goal-progress-container {
+            margin-top: 1rem;
+        }
+        
+        /* Comparison cards */
+        .comparison-card {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .comparison-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .trend-indicator {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
     
