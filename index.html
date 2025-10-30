@@ -104,6 +104,39 @@
                         <i class="fas fa-info-circle"></i> &nbsp; Exibindo todas as transações
                     </span>
                 </div>
+                
+                <!-- Resumo Calculado do Período -->
+                <div class="periodo-resumo" id="periodoResumo" style="display: none;">
+                    <h3 class="title is-5 has-text-white has-text-centered mb-3">
+                        <i class="fas fa-calculator"></i> Resumo do Período Selecionado
+                    </h3>
+                    <div class="periodo-resumo-grid">
+                        <div class="periodo-resumo-item">
+                            <div class="periodo-resumo-label">
+                                <i class="fas fa-arrow-up"></i> Total de Entradas
+                            </div>
+                            <div class="periodo-resumo-valor" id="periodoEntradas">R$ 0,00</div>
+                        </div>
+                        <div class="periodo-resumo-item">
+                            <div class="periodo-resumo-label">
+                                <i class="fas fa-arrow-down"></i> Total de Saídas
+                            </div>
+                            <div class="periodo-resumo-valor" id="periodoSaidas">R$ 0,00</div>
+                        </div>
+                        <div class="periodo-resumo-item" id="periodoSaldoCard">
+                            <div class="periodo-resumo-label">
+                                <i class="fas fa-equals"></i> Saldo do Período
+                            </div>
+                            <div class="periodo-resumo-valor" id="periodoSaldo">R$ 0,00</div>
+                        </div>
+                        <div class="periodo-resumo-item">
+                            <div class="periodo-resumo-label">
+                                <i class="fas fa-list"></i> Total de Transações
+                            </div>
+                            <div class="periodo-resumo-valor" id="periodoTransacoes">0</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Charts Dashboard -->

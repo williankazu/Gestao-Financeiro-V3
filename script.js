@@ -15,7 +15,9 @@
         // Load data on page load
         window.onload = function() {
             carregarDados();
-            document.getElementById('data').valueAsDate = new Date();
+            const hoje = new Date();
+            const dataHoje = hoje.toISOString().split('T')[0];
+            document.getElementById('data').value = dataHoje;
             carregarDarkMode();
         };
 
@@ -55,13 +57,14 @@
             document.getElementById(`btn-${periodo}`).classList.add('is-active');
             
             const hoje = new Date();
+            const dataHoje = hoje.toISOString().split('T')[0];
             
             switch(periodo) {
                 case 'todos':
                     document.getElementById('periodoAtivo').innerHTML = '<i class="fas fa-info-circle"></i> &nbsp; Exibindo todas as transações';
                     break;
                 case 'hoje':
-                    document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-day"></i> &nbsp; Exibindo: ${formatarData(hoje.toISOString().split('T')[0])}`;
+                    document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-day"></i> &nbsp; Exibindo: ${formatarData(dataHoje)}`;
                     break;
                 case 'semana':
                     const inicioSemana = new Date(hoje);
@@ -131,7 +134,9 @@
             } else {
                 modalTitle.textContent = 'Nova Transação';
                 limparFormulario();
-                document.getElementById('data').valueAsDate = new Date();
+                const hoje = new Date();
+                const dataHoje = hoje.toISOString().split('T')[0];
+                document.getElementById('data').value = dataHoje;
             }
             
             modal.classList.add('is-active');
@@ -909,11 +914,9 @@
                 
                 switch(filtroAtivo) {
                     case 'hoje':
-                        const hojeFim = new Date(hoje);
-                        hojeFim.setHours(23, 59, 59, 999);
+                        const dataHoje = hoje.toISOString().split('T')[0];
                         transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            const dataTransacao = new Date(t.data);
-                            return dataTransacao >= hoje && dataTransacao <= hojeFim;
+                            return t.data === dataHoje;
                         });
                         break;
                     case 'semana':
@@ -921,40 +924,42 @@
                         inicioSemana.setDate(hoje.getDate() - hoje.getDay());
                         const fimSemana = new Date(inicioSemana);
                         fimSemana.setDate(inicioSemana.getDate() + 6);
-                        fimSemana.setHours(23, 59, 59, 999);
+                        
+                        const dataInicioSemana = inicioSemana.toISOString().split('T')[0];
+                        const dataFimSemana = fimSemana.toISOString().split('T')[0];
+                        
                         transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            const dataTransacao = new Date(t.data);
-                            return dataTransacao >= inicioSemana && dataTransacao <= fimSemana;
+                            return t.data >= dataInicioSemana && t.data <= dataFimSemana;
                         });
                         break;
                     case 'mes':
                         const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
                         const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-                        fimMes.setHours(23, 59, 59, 999);
+                        
+                        const dataInicioMes = inicioMes.toISOString().split('T')[0];
+                        const dataFimMes = fimMes.toISOString().split('T')[0];
+                        
                         transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            const dataTransacao = new Date(t.data);
-                            return dataTransacao >= inicioMes && dataTransacao <= fimMes;
+                            return t.data >= dataInicioMes && t.data <= dataFimMes;
                         });
                         break;
                     case 'ano':
                         const inicioAno = new Date(hoje.getFullYear(), 0, 1);
                         const fimAno = new Date(hoje.getFullYear(), 11, 31);
-                        fimAno.setHours(23, 59, 59, 999);
+                        
+                        const dataInicioAno = inicioAno.toISOString().split('T')[0];
+                        const dataFimAno = fimAno.toISOString().split('T')[0];
+                        
                         transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            const dataTransacao = new Date(t.data);
-                            return dataTransacao >= inicioAno && dataTransacao <= fimAno;
+                            return t.data >= dataInicioAno && t.data <= dataFimAno;
                         });
                         break;
                     case 'customizado':
                         const dataInicial = document.getElementById('dataInicial').value;
                         const dataFinal = document.getElementById('dataFinal').value;
                         if (dataInicial && dataFinal) {
-                            const inicio = new Date(dataInicial);
-                            const fim = new Date(dataFinal);
-                            fim.setHours(23, 59, 59, 999);
                             transacoesFiltradas = transacoesFiltradas.filter(t => {
-                                const dataTransacao = new Date(t.data);
-                                return dataTransacao >= inicio && dataTransacao <= fim;
+                                return t.data >= dataInicial && t.data <= dataFinal;
                             });
                         }
                         break;
@@ -972,6 +977,54 @@
             
             filteredTransactions = transacoesFiltradas;
             atualizarInterface();
+            atualizarResumoCalculadoPeriodo();
+        }
+
+        function atualizarResumoCalculadoPeriodo() {
+            const resumoDiv = document.getElementById('periodoResumo');
+            
+            // Mostrar apenas quando não for "todos"
+            if (filtroAtivo === 'todos') {
+                resumoDiv.style.display = 'none';
+                return;
+            }
+            
+            resumoDiv.style.display = 'block';
+            
+            // Calcular totais do período filtrado
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+            let totalTransacoes = filteredTransactions.length;
+            
+            filteredTransactions.forEach(trans => {
+                if (trans.tipo === 'entrada') {
+                    totalEntradas += trans.valor;
+                } else {
+                    totalSaidas += trans.valor;
+                }
+            });
+            
+            const saldo = totalEntradas - totalSaidas;
+            
+            // Atualizar valores na interface
+            document.getElementById('periodoEntradas').textContent = formatarMoeda(totalEntradas);
+            document.getElementById('periodoSaidas').textContent = formatarMoeda(totalSaidas);
+            document.getElementById('periodoSaldo').textContent = formatarMoeda(saldo);
+            document.getElementById('periodoTransacoes').textContent = totalTransacoes;
+            
+            // Adicionar classe de cor ao saldo
+            const saldoCard = document.getElementById('periodoSaldoCard');
+            saldoCard.classList.remove('positivo', 'negativo');
+            if (saldo > 0) {
+                saldoCard.classList.add('positivo');
+            } else if (saldo < 0) {
+                saldoCard.classList.add('negativo');
+            }
+            
+            // Mensagem se não houver transações
+            if (totalTransacoes === 0) {
+                console.log('Nenhuma transação encontrada para o período: ' + filtroAtivo);
+            }
         }
 
         // ===== METAS FINANCEIRAS =====

@@ -260,4 +260,55 @@
             justify-content: center;
             gap: 0.5rem;
         }
+        
+        .periodo-resumo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 1.5rem;
+            color: white;
+            margin-top: 1rem;
+        }
+        
+        .periodo-resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .periodo-resumo-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .periodo-resumo-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+        
+        .periodo-resumo-valor {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .periodo-resumo-item.positivo {
+            background: rgba(56, 239, 125, 0.3);
+        }
+        
+        .periodo-resumo-item.negativo {
+            background: rgba(244, 92, 67, 0.3);
+        }
+        
+        @media screen and (max-width: 768px) {
+            .periodo-resumo-valor {
+                font-size: 1.3rem;
+            }
+            
+            .periodo-resumo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     
