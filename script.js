@@ -2,7 +2,7 @@
         let transactions = [];
         let editingIndex = -1;
         let categoryChart = null;
-        let typeChart = null;
+        let typeChart = null; 
         let expenseChart = null;
         let paymentChart = null;
         let trendChart = null;
