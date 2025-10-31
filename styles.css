@@ -1,5 +1,5 @@
 
-        body { 
+        body {
             background-color: #f5f5f5;
             min-height: 100vh;
         }
@@ -82,15 +82,6 @@
         .modal-card {
             max-width: 500px;
             margin: 0 auto;
-        }
-        
-        .delete-btn {
-            cursor: pointer;
-            color: #f14668;
-        }
-        
-        .delete-btn:hover {
-            color: #cc0f35;
         }
         
         .edit-btn {
@@ -310,5 +301,60 @@
             .periodo-resumo-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Selection Actions */
+        .selection-actions {
+            display: none;
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 2px solid #667eea;
+        }
+
+        .selection-actions.active {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .selection-info {
+            flex: 1;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        body.dark-mode .selection-actions {
+            background-color: #2d2d2d;
+            border-color: #667eea;
+        }
+
+        /* Checkbox styling */
+        .transaction-checkbox {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+        }
+
+        body.dark-mode .select-all-container {
+            background-color: #3d3d3d;
+        }
+
+        .select-all-checkbox {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
         }
     

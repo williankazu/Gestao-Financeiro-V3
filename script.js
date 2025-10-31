@@ -2,7 +2,7 @@
         let transactions = [];
         let editingIndex = -1;
         let categoryChart = null;
-        let typeChart = null; 
+        let typeChart = null;
         let expenseChart = null;
         let paymentChart = null;
         let trendChart = null;
@@ -11,6 +11,7 @@
         let metas = [];
         let orcamentos = {};
         let searchTerm = '';
+        let selectedTransactions = new Set();
 
         // Load data on page load
         window.onload = function() {
@@ -105,14 +106,6 @@
             aplicarFiltros();
         }
 
-        function carregarDados() {
-            const savedData = localStorage.getItem('financialTransactions');
-            if (savedData) {
-                transactions = JSON.parse(savedData);
-                atualizarInterface();
-            }
-        }
-
         function salvarDados() {
             localStorage.setItem('financialTransactions', JSON.stringify(transactions));
         }
@@ -193,12 +186,78 @@
             closeModal();
         }
 
-        function deletarTransacao(index) {
-            if (confirm('Deseja realmente excluir esta transação?')) {
-                transactions.splice(index, 1);
+        // ===== FUNÇÕES DE SELEÇÃO =====
+        function toggleSelection(id) {
+            if (selectedTransactions.has(id)) {
+                selectedTransactions.delete(id);
+            } else {
+                selectedTransactions.add(id);
+            }
+            atualizarBarraSelecao();
+            atualizarCheckboxSelectAll();
+        }
+
+        function selecionarTodos() {
+            const checkbox = document.getElementById('selectAllCheckbox');
+            selectedTransactions.clear();
+            
+            if (checkbox.checked) {
+                filteredTransactions.forEach(trans => {
+                    selectedTransactions.add(trans.id);
+                });
+            }
+            
+            atualizarTabela();
+            atualizarBarraSelecao();
+        }
+
+        function desmarcarTodos() {
+            selectedTransactions.clear();
+            document.getElementById('selectAllCheckbox').checked = false;
+            atualizarTabela();
+            atualizarBarraSelecao();
+        }
+
+        function atualizarBarraSelecao() {
+            const selectionActions = document.getElementById('selectionActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectedTransactions.size > 0) {
+                selectionActions.classList.add('active');
+                selectedCount.textContent = selectedTransactions.size;
+            } else {
+                selectionActions.classList.remove('active');
+            }
+        }
+
+        function atualizarCheckboxSelectAll() {
+            const checkbox = document.getElementById('selectAllCheckbox');
+            if (filteredTransactions.length === 0) return;
+            
+            const todosVisivelSelecionados = filteredTransactions.every(trans => 
+                selectedTransactions.has(trans.id)
+            );
+            
+            checkbox.checked = todosVisivelSelecionados && filteredTransactions.length > 0;
+        }
+
+        function excluirSelecionados() {
+            if (selectedTransactions.size === 0) {
+                alert('Nenhuma transação selecionada!');
+                return;
+            }
+
+            const count = selectedTransactions.size;
+            if (confirm(`Deseja realmente excluir ${count} transação(ões) selecionada(s)?`)) {
+                // Filtrar transações mantendo apenas as não selecionadas
+                transactions = transactions.filter(trans => !selectedTransactions.has(trans.id));
+                
                 salvarDados();
+                selectedTransactions.clear();
                 filteredTransactions = [...transactions];
                 filtrarPorPeriodo(filtroAtivo);
+                
+                alert(`${count} transação(ões) excluída(s) com sucesso!`);
             }
         }
 
@@ -665,11 +724,15 @@
 
         function atualizarTabela() {
             const tbody = document.getElementById('transactionsTable');
+            const selectAllContainer = document.getElementById('selectAllContainer');
             
             if (filteredTransactions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="has-text-centered">Nenhuma transação encontrada neste período</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="has-text-centered">Nenhuma transação encontrada neste período</td></tr>';
+                selectAllContainer.style.display = 'none';
                 return;
             }
+
+            selectAllContainer.style.display = 'flex';
 
             // Sort by date (most recent first)
             const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(b.data) - new Date(a.data));
@@ -680,6 +743,7 @@
                 const typeIcon = trans.tipo === 'entrada' ? 'fa-arrow-up' : 'fa-arrow-down';
                 const typeColor = trans.tipo === 'entrada' ? 'has-text-success' : 'has-text-danger';
                 const formaPagamento = trans.formaPagamento || 'Dinheiro';
+                const isSelected = selectedTransactions.has(trans.id);
                 
                 // Ícones para formas de pagamento
                 const paymentIcons = {
@@ -692,6 +756,12 @@
                 
                 return `
                     <tr class="${classType}">
+                        <td>
+                            <input type="checkbox" 
+                                   class="transaction-checkbox" 
+                                   ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleSelection(${trans.id})">
+                        </td>
                         <td>${formatarData(trans.data)}</td>
                         <td>${trans.descricao}</td>
                         <td><span class="tag">${trans.categoria}</span></td>
@@ -707,13 +777,12 @@
                             <span class="icon edit-btn" onclick="openModal('edit', ${originalIndex})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </span>
-                            <span class="icon delete-btn" onclick="deletarTransacao(${originalIndex})" title="Excluir">
-                                <i class="fas fa-trash"></i>
-                            </span>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            atualizarCheckboxSelectAll();
         }
 
         function formatarMoeda(valor) {
@@ -865,6 +934,7 @@
             if (confirm('Deseja realmente excluir TODAS as transações? Esta ação não pode ser desfeita!')) {
                 transactions = [];
                 filteredTransactions = [];
+                selectedTransactions.clear();
                 salvarDados();
                 filtrarPorPeriodo('todos');
                 alert('Todos os dados foram excluídos!');
@@ -1019,11 +1089,6 @@
                 saldoCard.classList.add('positivo');
             } else if (saldo < 0) {
                 saldoCard.classList.add('negativo');
-            }
-            
-            // Mensagem se não houver transações
-            if (totalTransacoes === 0) {
-                console.log('Nenhuma transação encontrada para o período: ' + filtroAtivo);
             }
         }
 
@@ -1250,15 +1315,5 @@
 
             // Salvar PDF
             doc.save(`relatorio_financeiro_${new Date().toISOString().split('T')[0]}.pdf`);
-        }
-
-        function limparDados() {
-            if (confirm('Deseja realmente excluir TODAS as transações? Esta ação não pode ser desfeita!')) {
-                transactions = [];
-                filteredTransactions = [];
-                salvarDados();
-                filtrarPorPeriodo('todos');
-                alert('Todos os dados foram excluídos!');
-            }
         }
     

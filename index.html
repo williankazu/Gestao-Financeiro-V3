@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR"> 
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -265,7 +265,7 @@
                                 <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarArquivo(event)">
                                 <button class="button is-danger" onclick="limparDados()">
                                     <span class="icon"><i class="fas fa-trash"></i></span>
-                                    <span>Limpar</span>
+                                    <span>Limpar Tudo</span>
                                 </button>
                             </div>
                         </div>
@@ -307,22 +307,49 @@
                     <h2 class="title is-4">
                         <i class="fas fa-list"></i> Transações
                     </h2>
+                    
+                    <!-- Selection Actions Bar -->
+                    <div class="selection-actions" id="selectionActions">
+                        <div class="selection-info">
+                            <span id="selectedCount">0</span> transação(ões) selecionada(s)
+                        </div>
+                        <button class="button is-danger" onclick="excluirSelecionados()">
+                            <span class="icon"><i class="fas fa-trash"></i></span>
+                            <span>Excluir Selecionados</span>
+                        </button>
+                        <button class="button is-light" onclick="desmarcarTodos()">
+                            <span class="icon"><i class="fas fa-times"></i></span>
+                            <span>Desmarcar Todos</span>
+                        </button>
+                    </div>
+
+                    <!-- Select All -->
+                    <div class="select-all-container" id="selectAllContainer" style="display: none;">
+                        <input type="checkbox" class="select-all-checkbox" id="selectAllCheckbox" onchange="selecionarTodos()">
+                        <label for="selectAllCheckbox" style="cursor: pointer; user-select: none;">
+                            <strong>Selecionar todas as transações visíveis</strong>
+                        </label>
+                    </div>
+
                     <div class="table-container">
                         <table class="table is-fullwidth is-striped is-hoverable">
                             <thead>
                                 <tr>
+                                    <th style="width: 50px;">
+                                        <i class="fas fa-check-square"></i>
+                                    </th>
                                     <th>Data</th>
                                     <th>Descrição</th>
                                     <th>Categoria</th>
                                     <th>Pagamento</th>
                                     <th>Tipo</th>
                                     <th>Valor</th>
-                                    <th>Ações</th>
+                                    <th style="width: 80px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="transactionsTable">
                                 <tr>
-                                    <td colspan="7" class="has-text-centered">
+                                    <td colspan="8" class="has-text-centered">
                                         Nenhuma transação registrada
                                     </td>
                                 </tr>
