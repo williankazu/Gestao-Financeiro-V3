@@ -84,6 +84,15 @@
             margin: 0 auto;
         }
         
+        .delete-btn {
+            cursor: pointer;
+            color: #f14668;
+        }
+        
+        .delete-btn:hover {
+            color: #cc0f35;
+        }
+        
         .edit-btn {
             cursor: pointer;
             color: #3273dc;
@@ -293,6 +302,301 @@
             background: rgba(244, 92, 67, 0.3);
         }
         
+        /* Navegação de Período */
+        .periodo-navegacao {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+        
+        .periodo-navegacao button {
+            min-width: 40px;
+        }
+        
+        .periodo-atual {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 200px;
+            text-align: center;
+            color: #667eea;
+        }
+        
+        /* Filtros Avançados */
+        .filtros-avancados {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .filtro-periodo-btn {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Calendário Mini */
+        .mini-calendario {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .calendario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .calendario-mes {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .calendario-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+        }
+        
+        .calendario-dia {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .calendario-dia:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .calendario-dia.hoje {
+            background-color: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .calendario-dia.selecionado {
+            background-color: #38ef7d;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .calendario-dia.tem-transacao {
+            position: relative;
+        }
+        
+        .calendario-dia.tem-transacao::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background-color: #f45c43;
+            border-radius: 50%;
+        }
+        
+        .calendario-dia.vazio {
+            opacity: 0.3;
+            cursor: default;
+        }
+        
+        .calendario-dia-semana {
+            font-weight: bold;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            color: #667eea;
+        }
+        
+        body.dark-mode .mini-calendario {
+            background-color: #2d2d2d;
+        }
+        
+        body.dark-mode .calendario-dia:hover {
+            background-color: #3d3d3d;
+        }
+        
+        /* Análise de Formas de Pagamento */
+        .payment-analysis-section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .payment-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .payment-method-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .payment-method-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .payment-method-card.dinheiro {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        .payment-method-card.pix {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        
+        .payment-method-card.debito {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+        
+        .payment-method-card.credito {
+            background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+        }
+        
+        .payment-method-card.crediario {
+            background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+        }
+        
+        .payment-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .payment-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .payment-amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .payment-percentage {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+        
+        .payment-count {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .payment-comparison-table {
+            margin-top: 2rem;
+        }
+        
+        .payment-stats-row {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s;
+        }
+        
+        .payment-stats-row:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .payment-stats-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .payment-stats-info {
+            flex: 1;
+            margin-left: 1rem;
+        }
+        
+        .payment-stats-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .payment-stats-details {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .payment-stats-bar {
+            flex: 2;
+            margin: 0 1rem;
+        }
+        
+        .payment-stats-value {
+            font-weight: bold;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .payment-ranking {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        
+        .payment-ranking.first {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .payment-ranking.second {
+            background: #C0C0C0;
+            color: #333;
+        }
+        
+        .payment-ranking.third {
+            background: #CD7F32;
+            color: white;
+        }
+        
+        body.dark-mode .payment-analysis-section {
+            background-color: #2d2d2d;
+        }
+        
+        body.dark-mode .payment-stats-row {
+            border-bottom-color: #404040;
+        }
+        
+        body.dark-mode .payment-stats-row:hover {
+            background-color: #3d3d3d;
+        }
+        
+        body.dark-mode .payment-stats-details {
+            color: #aaa;
+        }
+        
         @media screen and (max-width: 768px) {
             .periodo-resumo-valor {
                 font-size: 1.3rem;
@@ -301,60 +605,31 @@
             .periodo-resumo-grid {
                 grid-template-columns: 1fr;
             }
-        }
-
-        /* Selection Actions */
-        .selection-actions {
-            display: none;
-            background-color: #f5f5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border: 2px solid #667eea;
-        }
-
-        .selection-actions.active {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .selection-info {
-            flex: 1;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        body.dark-mode .selection-actions {
-            background-color: #2d2d2d;
-            border-color: #667eea;
-        }
-
-        /* Checkbox styling */
-        .transaction-checkbox {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
-        }
-
-        .select-all-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            background-color: #f5f5f5;
-            border-radius: 6px;
-        }
-
-        body.dark-mode .select-all-container {
-            background-color: #3d3d3d;
-        }
-
-        .select-all-checkbox {
-            cursor: pointer;
-            width: 18px;
-            height: 18px;
+            
+            .periodo-atual {
+                font-size: 1rem;
+                min-width: 150px;
+            }
+            
+            .filtros-avancados {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .payment-cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-amount {
+                font-size: 1.5rem;
+            }
+            
+            .payment-stats-row {
+                flex-wrap: wrap;
+            }
+            
+            .payment-stats-bar {
+                width: 100%;
+                margin: 0.5rem 0;
+            }
         }
     

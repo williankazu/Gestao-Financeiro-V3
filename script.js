@@ -6,12 +6,17 @@
         let expenseChart = null;
         let paymentChart = null;
         let trendChart = null;
+        let paymentComparisonChart = null;
         let filteredTransactions = [];
         let filtroAtivo = 'todos';
         let metas = [];
         let orcamentos = {};
         let searchTerm = '';
-        let selectedTransactions = new Set();
+        let calendarioMesAtual = new Date();
+        let periodoNavegacao = {
+            tipo: 'todos',
+            data: new Date()
+        };
 
         // Load data on page load
         window.onload = function() {
@@ -20,6 +25,7 @@
             const dataHoje = hoje.toISOString().split('T')[0];
             document.getElementById('data').value = dataHoje;
             carregarDarkMode();
+            renderizarCalendario();
         };
 
         // Update charts on window resize
@@ -50,36 +56,99 @@
             }
         }
 
+        function navegarPeriodo(direcao) {
+            const tipo = periodoNavegacao.tipo;
+            const data = new Date(periodoNavegacao.data);
+            
+            switch(tipo) {
+                case 'hoje':
+                case 'ontem':
+                    data.setDate(data.getDate() + direcao);
+                    periodoNavegacao.data = data;
+                    filtrarPorDataEspecifica(data);
+                    break;
+                case 'semana':
+                case 'semana-passada':
+                    data.setDate(data.getDate() + (7 * direcao));
+                    periodoNavegacao.data = data;
+                    filtrarPorSemana(data);
+                    break;
+                case 'mes':
+                case 'mes-passado':
+                    data.setMonth(data.getMonth() + direcao);
+                    periodoNavegacao.data = data;
+                    filtrarPorMes(data);
+                    break;
+                case 'ano':
+                case 'ano-passado':
+                    data.setFullYear(data.getFullYear() + direcao);
+                    periodoNavegacao.data = data;
+                    filtrarPorAno(data);
+                    break;
+                default:
+                    return;
+            }
+        }
+
         function filtrarPorPeriodo(periodo) {
             filtroAtivo = periodo;
+            periodoNavegacao.tipo = periodo;
+            periodoNavegacao.data = new Date();
             
             // Remover classe active de todos os botões
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('is-active'));
-            document.getElementById(`btn-${periodo}`).classList.add('is-active');
+            document.querySelectorAll('.filtro-periodo-btn').forEach(btn => btn.classList.remove('is-active'));
+            const btn = document.getElementById(`btn-${periodo}`);
+            if (btn) btn.classList.add('is-active');
             
             const hoje = new Date();
-            const dataHoje = hoje.toISOString().split('T')[0];
+            hoje.setHours(0, 0, 0, 0);
             
             switch(periodo) {
                 case 'todos':
+                    filteredTransactions = [...transactions];
                     document.getElementById('periodoAtivo').innerHTML = '<i class="fas fa-info-circle"></i> &nbsp; Exibindo todas as transações';
+                    document.getElementById('periodoAtualDisplay').textContent = 'Todos os Períodos';
                     break;
                 case 'hoje':
-                    document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-day"></i> &nbsp; Exibindo: ${formatarData(dataHoje)}`;
+                    filtrarPorDataEspecifica(hoje);
+                    break;
+                case 'ontem':
+                    const ontem = new Date(hoje);
+                    ontem.setDate(hoje.getDate() - 1);
+                    filtrarPorDataEspecifica(ontem);
                     break;
                 case 'semana':
-                    const inicioSemana = new Date(hoje);
-                    inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-                    const fimSemana = new Date(inicioSemana);
-                    fimSemana.setDate(inicioSemana.getDate() + 6);
-                    document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-week"></i> &nbsp; Semana: ${formatarData(inicioSemana.toISOString().split('T')[0])} a ${formatarData(fimSemana.toISOString().split('T')[0])}`;
+                    filtrarPorSemana(hoje);
+                    break;
+                case 'semana-passada':
+                    const semanaPassada = new Date(hoje);
+                    semanaPassada.setDate(hoje.getDate() - 7);
+                    filtrarPorSemana(semanaPassada);
                     break;
                 case 'mes':
-                    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                    document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-alt"></i> &nbsp; ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+                    filtrarPorMes(hoje);
+                    break;
+                case 'mes-passado':
+                    const mesPassado = new Date(hoje);
+                    mesPassado.setMonth(hoje.getMonth() - 1);
+                    filtrarPorMes(mesPassado);
                     break;
                 case 'ano':
-                    document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar"></i> &nbsp; Ano de ${hoje.getFullYear()}`;
+                    filtrarPorAno(hoje);
+                    break;
+                case 'ano-passado':
+                    const anoPassado = new Date(hoje);
+                    anoPassado.setFullYear(hoje.getFullYear() - 1);
+                    filtrarPorAno(anoPassado);
+                    break;
+                case 'ultimos-7-dias':
+                    filtrarUltimosDias(7);
+                    break;
+                case 'ultimos-30-dias':
+                    filtrarUltimosDias(30);
+                    break;
+                case 'ultimos-90-dias':
+                    filtrarUltimosDias(90);
                     break;
             }
             
@@ -87,7 +156,73 @@
             document.getElementById('dataInicial').value = '';
             document.getElementById('dataFinal').value = '';
             
-            aplicarFiltros();
+            atualizarInterface();
+            atualizarResumoCalculadoPeriodo();
+            renderizarCalendario();
+        }
+
+        function filtrarPorDataEspecifica(data) {
+            const dataStr = data.toISOString().split('T')[0];
+            filteredTransactions = transactions.filter(t => t.data === dataStr);
+            
+            document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-day"></i> &nbsp; ${formatarData(dataStr)}`;
+            document.getElementById('periodoAtualDisplay').textContent = formatarData(dataStr);
+        }
+
+        function filtrarPorSemana(data) {
+            const inicio = new Date(data);
+            inicio.setDate(data.getDate() - data.getDay());
+            const fim = new Date(inicio);
+            fim.setDate(inicio.getDate() + 6);
+            
+            const dataInicio = inicio.toISOString().split('T')[0];
+            const dataFim = fim.toISOString().split('T')[0];
+            
+            filteredTransactions = transactions.filter(t => t.data >= dataInicio && t.data <= dataFim);
+            
+            document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-week"></i> &nbsp; Semana: ${formatarData(dataInicio)} a ${formatarData(dataFim)}`;
+            document.getElementById('periodoAtualDisplay').textContent = `Semana: ${formatarData(dataInicio)} a ${formatarData(dataFim)}`;
+        }
+
+        function filtrarPorMes(data) {
+            const inicio = new Date(data.getFullYear(), data.getMonth(), 1);
+            const fim = new Date(data.getFullYear(), data.getMonth() + 1, 0);
+            
+            const dataInicio = inicio.toISOString().split('T')[0];
+            const dataFim = fim.toISOString().split('T')[0];
+            
+            filteredTransactions = transactions.filter(t => t.data >= dataInicio && t.data <= dataFim);
+            
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-alt"></i> &nbsp; ${meses[data.getMonth()]} de ${data.getFullYear()}`;
+            document.getElementById('periodoAtualDisplay').textContent = `${meses[data.getMonth()]} ${data.getFullYear()}`;
+        }
+
+        function filtrarPorAno(data) {
+            const inicio = new Date(data.getFullYear(), 0, 1);
+            const fim = new Date(data.getFullYear(), 11, 31);
+            
+            const dataInicio = inicio.toISOString().split('T')[0];
+            const dataFim = fim.toISOString().split('T')[0];
+            
+            filteredTransactions = transactions.filter(t => t.data >= dataInicio && t.data <= dataFim);
+            
+            document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar"></i> &nbsp; Ano de ${data.getFullYear()}`;
+            document.getElementById('periodoAtualDisplay').textContent = `Ano ${data.getFullYear()}`;
+        }
+
+        function filtrarUltimosDias(dias) {
+            const hoje = new Date();
+            const dataInicio = new Date(hoje);
+            dataInicio.setDate(hoje.getDate() - dias);
+            
+            const dataInicioStr = dataInicio.toISOString().split('T')[0];
+            const dataFimStr = hoje.toISOString().split('T')[0];
+            
+            filteredTransactions = transactions.filter(t => t.data >= dataInicioStr && t.data <= dataFimStr);
+            
+            document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-history"></i> &nbsp; Últimos ${dias} dias`;
+            document.getElementById('periodoAtualDisplay').textContent = `Últimos ${dias} dias`;
         }
 
         function filtrarPorPeriodoCustomizado() {
@@ -97,13 +232,93 @@
             if (!dataInicial || !dataFinal) return;
             
             filtroAtivo = 'customizado';
+            periodoNavegacao.tipo = 'customizado';
             
             // Remover classe active de todos os botões
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('is-active'));
+            document.querySelectorAll('.filtro-periodo-btn').forEach(btn => btn.classList.remove('is-active'));
+            
+            filteredTransactions = transactions.filter(t => t.data >= dataInicial && t.data <= dataFinal);
             
             document.getElementById('periodoAtivo').innerHTML = `<i class="fas fa-calendar-alt"></i> &nbsp; Período: ${formatarData(dataInicial)} a ${formatarData(dataFinal)}`;
+            document.getElementById('periodoAtualDisplay').textContent = `${formatarData(dataInicial)} a ${formatarData(dataFinal)}`;
             
-            aplicarFiltros();
+            atualizarInterface();
+            atualizarResumoCalculadoPeriodo();
+            renderizarCalendario();
+        }
+
+        // ===== CALENDÁRIO =====
+        function renderizarCalendario() {
+            const container = document.getElementById('calendarioContainer');
+            const mes = calendarioMesAtual.getMonth();
+            const ano = calendarioMesAtual.getFullYear();
+            
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            document.getElementById('calendarioMes').textContent = `${meses[mes]} ${ano}`;
+            
+            const primeiroDia = new Date(ano, mes, 1).getDay();
+            const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+            const hoje = new Date();
+            const dataHoje = hoje.toISOString().split('T')[0];
+            
+            // Criar mapa de transações por data
+            const transacoesPorData = {};
+            transactions.forEach(trans => {
+                if (!transacoesPorData[trans.data]) {
+                    transacoesPorData[trans.data] = [];
+                }
+                transacoesPorData[trans.data].push(trans);
+            });
+            
+            let html = '<div class="calendario-grid">';
+            
+            // Dias da semana
+            const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            diasSemana.forEach(dia => {
+                html += `<div class="calendario-dia-semana">${dia}</div>`;
+            });
+            
+            // Dias vazios antes do primeiro dia
+            for (let i = 0; i < primeiroDia; i++) {
+                html += '<div class="calendario-dia vazio"></div>';
+            }
+            
+            // Dias do mês
+            for (let dia = 1; dia <= ultimoDia; dia++) {
+                const dataAtual = new Date(ano, mes, dia);
+                const dataStr = dataAtual.toISOString().split('T')[0];
+                const ehHoje = dataStr === dataHoje;
+                const temTransacao = transacoesPorData[dataStr] && transacoesPorData[dataStr].length > 0;
+                
+                let classes = 'calendario-dia';
+                if (ehHoje) classes += ' hoje';
+                if (temTransacao) classes += ' tem-transacao';
+                
+                html += `<div class="${classes}" onclick="selecionarDiaCalendario('${dataStr}')" title="${temTransacao ? transacoesPorData[dataStr].length + ' transação(ões)' : 'Sem transações'}">${dia}</div>`;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function navegarCalendario(direcao) {
+            calendarioMesAtual.setMonth(calendarioMesAtual.getMonth() + direcao);
+            renderizarCalendario();
+        }
+
+        function selecionarDiaCalendario(data) {
+            const dataObj = new Date(data + 'T12:00:00');
+            periodoNavegacao.tipo = 'dia';
+            periodoNavegacao.data = dataObj;
+            filtroAtivo = 'dia';
+            
+            // Remover classe active de todos os botões
+            document.querySelectorAll('.filtro-periodo-btn').forEach(btn => btn.classList.remove('is-active'));
+            
+            filtrarPorDataEspecifica(dataObj);
+            atualizarInterface();
+            atualizarResumoCalculadoPeriodo();
+            renderizarCalendario();
         }
 
         function salvarDados() {
@@ -183,81 +398,17 @@
             salvarDados();
             filteredTransactions = [...transactions];
             filtrarPorPeriodo(filtroAtivo);
+            renderizarCalendario();
             closeModal();
         }
 
-        // ===== FUNÇÕES DE SELEÇÃO =====
-        function toggleSelection(id) {
-            if (selectedTransactions.has(id)) {
-                selectedTransactions.delete(id);
-            } else {
-                selectedTransactions.add(id);
-            }
-            atualizarBarraSelecao();
-            atualizarCheckboxSelectAll();
-        }
-
-        function selecionarTodos() {
-            const checkbox = document.getElementById('selectAllCheckbox');
-            selectedTransactions.clear();
-            
-            if (checkbox.checked) {
-                filteredTransactions.forEach(trans => {
-                    selectedTransactions.add(trans.id);
-                });
-            }
-            
-            atualizarTabela();
-            atualizarBarraSelecao();
-        }
-
-        function desmarcarTodos() {
-            selectedTransactions.clear();
-            document.getElementById('selectAllCheckbox').checked = false;
-            atualizarTabela();
-            atualizarBarraSelecao();
-        }
-
-        function atualizarBarraSelecao() {
-            const selectionActions = document.getElementById('selectionActions');
-            const selectedCount = document.getElementById('selectedCount');
-            
-            if (selectedTransactions.size > 0) {
-                selectionActions.classList.add('active');
-                selectedCount.textContent = selectedTransactions.size;
-            } else {
-                selectionActions.classList.remove('active');
-            }
-        }
-
-        function atualizarCheckboxSelectAll() {
-            const checkbox = document.getElementById('selectAllCheckbox');
-            if (filteredTransactions.length === 0) return;
-            
-            const todosVisivelSelecionados = filteredTransactions.every(trans => 
-                selectedTransactions.has(trans.id)
-            );
-            
-            checkbox.checked = todosVisivelSelecionados && filteredTransactions.length > 0;
-        }
-
-        function excluirSelecionados() {
-            if (selectedTransactions.size === 0) {
-                alert('Nenhuma transação selecionada!');
-                return;
-            }
-
-            const count = selectedTransactions.size;
-            if (confirm(`Deseja realmente excluir ${count} transação(ões) selecionada(s)?`)) {
-                // Filtrar transações mantendo apenas as não selecionadas
-                transactions = transactions.filter(trans => !selectedTransactions.has(trans.id));
-                
+        function deletarTransacao(index) {
+            if (confirm('Deseja realmente excluir esta transação?')) {
+                transactions.splice(index, 1);
                 salvarDados();
-                selectedTransactions.clear();
                 filteredTransactions = [...transactions];
                 filtrarPorPeriodo(filtroAtivo);
-                
-                alert(`${count} transação(ões) excluída(s) com sucesso!`);
+                renderizarCalendario();
             }
         }
 
@@ -275,14 +426,13 @@
             atualizarGraficoGastos();
             atualizarGraficoFormasPagamento();
             atualizarGraficoTendencias();
-            atualizarResumoPeriodo();
+            atualizarAnaliseFormasPagamento();
         }
 
         function atualizarGraficoCategoria() {
             const ctx = document.getElementById('categoryChart');
             if (!ctx) return;
 
-            // Calcular total por categoria
             const categorias = {};
             filteredTransactions.forEach(trans => {
                 if (!categorias[trans.categoria]) {
@@ -415,7 +565,6 @@
             const ctx = document.getElementById('expenseChart');
             if (!ctx) return;
 
-            // Calcular apenas saídas por categoria
             const categorias = {};
             filteredTransactions.forEach(trans => {
                 if (trans.tipo === 'saida') {
@@ -487,7 +636,6 @@
             const ctx = document.getElementById('paymentChart');
             if (!ctx) return;
 
-            // Calcular total por forma de pagamento
             const formasPagamento = {};
             filteredTransactions.forEach(trans => {
                 const forma = trans.formaPagamento || 'Dinheiro';
@@ -562,12 +710,10 @@
             const ctx = document.getElementById('trendChart');
             if (!ctx) return;
 
-            // Pegar últimos 30 dias
             const hoje = new Date();
             const trintaDiasAtras = new Date(hoje);
             trintaDiasAtras.setDate(hoje.getDate() - 30);
 
-            // Agrupar transações por data
             const transacoesPorDia = {};
             transactions.forEach(trans => {
                 const dataTransacao = new Date(trans.data);
@@ -584,7 +730,6 @@
                 }
             });
 
-            // Criar array de datas e valores
             const datasOrdenadas = Object.keys(transacoesPorDia).sort();
             const labels = datasOrdenadas.map(data => formatarData(data));
             const dataEntradas = datasOrdenadas.map(data => transacoesPorDia[data].entradas);
@@ -650,59 +795,6 @@
             });
         }
 
-        function atualizarResumoPeriodo() {
-            const resumoDiv = document.getElementById('resumoPeriodo');
-            
-            let totalEntradas = 0;
-            let totalSaidas = 0;
-            let totalTransacoes = filteredTransactions.length;
-            
-            filteredTransactions.forEach(trans => {
-                if (trans.tipo === 'entrada') {
-                    totalEntradas += trans.valor;
-                } else {
-                    totalSaidas += trans.valor;
-                }
-            });
-            
-            const saldo = totalEntradas - totalSaidas;
-            const mediaDiaria = totalSaidas / (totalTransacoes > 0 ? Math.max(1, totalTransacoes) : 1);
-            
-            if (totalTransacoes === 0) {
-                resumoDiv.innerHTML = '<p class="has-text-centered">Nenhuma transação neste período</p>';
-                return;
-            }
-            
-            resumoDiv.innerHTML = `
-                <div class="content">
-                    <table class="table is-fullwidth is-narrow">
-                        <tbody>
-                            <tr>
-                                <td><strong><i class="fas fa-list"></i> Total de Transações:</strong></td>
-                                <td class="has-text-right">${totalTransacoes}</td>
-                            </tr>
-                            <tr>
-                                <td><strong><i class="fas fa-arrow-up has-text-success"></i> Entradas:</strong></td>
-                                <td class="has-text-right has-text-success">${formatarMoeda(totalEntradas)}</td>
-                            </tr>
-                            <tr>
-                                <td><strong><i class="fas fa-arrow-down has-text-danger"></i> Saídas:</strong></td>
-                                <td class="has-text-right has-text-danger">${formatarMoeda(totalSaidas)}</td>
-                            </tr>
-                            <tr>
-                                <td><strong><i class="fas fa-balance-scale"></i> Saldo:</strong></td>
-                                <td class="has-text-right ${saldo >= 0 ? 'has-text-success' : 'has-text-danger'}">${formatarMoeda(saldo)}</td>
-                            </tr>
-                            <tr>
-                                <td><strong><i class="fas fa-chart-line"></i> Média de Gastos:</strong></td>
-                                <td class="has-text-right">${formatarMoeda(mediaDiaria)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
         function atualizarEstatisticas() {
             let totalEntradas = 0;
             let totalSaidas = 0;
@@ -724,17 +816,12 @@
 
         function atualizarTabela() {
             const tbody = document.getElementById('transactionsTable');
-            const selectAllContainer = document.getElementById('selectAllContainer');
             
             if (filteredTransactions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="has-text-centered">Nenhuma transação encontrada neste período</td></tr>';
-                selectAllContainer.style.display = 'none';
+                tbody.innerHTML = '<tr><td colspan="7" class="has-text-centered">Nenhuma transação encontrada neste período</td></tr>';
                 return;
             }
 
-            selectAllContainer.style.display = 'flex';
-
-            // Sort by date (most recent first)
             const sortedTransactions = [...filteredTransactions].sort((a, b) => new Date(b.data) - new Date(a.data));
 
             tbody.innerHTML = sortedTransactions.map((trans, index) => {
@@ -743,9 +830,7 @@
                 const typeIcon = trans.tipo === 'entrada' ? 'fa-arrow-up' : 'fa-arrow-down';
                 const typeColor = trans.tipo === 'entrada' ? 'has-text-success' : 'has-text-danger';
                 const formaPagamento = trans.formaPagamento || 'Dinheiro';
-                const isSelected = selectedTransactions.has(trans.id);
                 
-                // Ícones para formas de pagamento
                 const paymentIcons = {
                     'Dinheiro': '💵',
                     'PIX': '📱',
@@ -756,12 +841,6 @@
                 
                 return `
                     <tr class="${classType}">
-                        <td>
-                            <input type="checkbox" 
-                                   class="transaction-checkbox" 
-                                   ${isSelected ? 'checked' : ''} 
-                                   onchange="toggleSelection(${trans.id})">
-                        </td>
                         <td>${formatarData(trans.data)}</td>
                         <td>${trans.descricao}</td>
                         <td><span class="tag">${trans.categoria}</span></td>
@@ -777,12 +856,13 @@
                             <span class="icon edit-btn" onclick="openModal('edit', ${originalIndex})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </span>
+                            <span class="icon delete-btn" onclick="deletarTransacao(${originalIndex})" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </span>
                         </td>
                     </tr>
                 `;
             }).join('');
-
-            atualizarCheckboxSelectAll();
         }
 
         function formatarMoeda(valor) {
@@ -889,6 +969,7 @@
                 salvarDados();
                 filteredTransactions = [...transactions];
                 filtrarPorPeriodo(filtroAtivo);
+                renderizarCalendario();
                 alert(`${newTransactions.length} transação(ões) importada(s) com sucesso!`);
             } else {
                 alert('Nenhuma transação válida encontrada no arquivo!');
@@ -901,7 +982,6 @@
             const rows = XLSX.utils.sheet_to_json(firstSheet);
 
             const newTransactions = rows.map((row, index) => {
-                // Parse date from DD/MM/YYYY to YYYY-MM-DD
                 let dataFormatada = row.Data || '';
                 if (dataFormatada.includes('/')) {
                     const [dia, mes, ano] = dataFormatada.split('/');
@@ -924,6 +1004,7 @@
                 salvarDados();
                 filteredTransactions = [...transactions];
                 filtrarPorPeriodo(filtroAtivo);
+                renderizarCalendario();
                 alert(`${newTransactions.length} transação(ões) importada(s) com sucesso!`);
             } else {
                 alert('Nenhuma transação válida encontrada no arquivo!');
@@ -934,14 +1015,13 @@
             if (confirm('Deseja realmente excluir TODAS as transações? Esta ação não pode ser desfeita!')) {
                 transactions = [];
                 filteredTransactions = [];
-                selectedTransactions.clear();
                 salvarDados();
                 filtrarPorPeriodo('todos');
+                renderizarCalendario();
                 alert('Todos os dados foram excluídos!');
             }
         }
 
-        // ===== DARK MODE =====
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -967,76 +1047,18 @@
             }
         }
 
-        // ===== BUSCA =====
         function buscarTransacoes() {
             searchTerm = document.getElementById('searchInput').value.toLowerCase();
             aplicarFiltros();
         }
 
         function aplicarFiltros() {
-            // Primeiro aplica o filtro de período
             let transacoesFiltradas = [...transactions];
             
-            // Aplicar filtro de período
             if (filtroAtivo !== 'todos') {
-                const hoje = new Date();
-                hoje.setHours(0, 0, 0, 0);
-                
-                switch(filtroAtivo) {
-                    case 'hoje':
-                        const dataHoje = hoje.toISOString().split('T')[0];
-                        transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            return t.data === dataHoje;
-                        });
-                        break;
-                    case 'semana':
-                        const inicioSemana = new Date(hoje);
-                        inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-                        const fimSemana = new Date(inicioSemana);
-                        fimSemana.setDate(inicioSemana.getDate() + 6);
-                        
-                        const dataInicioSemana = inicioSemana.toISOString().split('T')[0];
-                        const dataFimSemana = fimSemana.toISOString().split('T')[0];
-                        
-                        transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            return t.data >= dataInicioSemana && t.data <= dataFimSemana;
-                        });
-                        break;
-                    case 'mes':
-                        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-                        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-                        
-                        const dataInicioMes = inicioMes.toISOString().split('T')[0];
-                        const dataFimMes = fimMes.toISOString().split('T')[0];
-                        
-                        transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            return t.data >= dataInicioMes && t.data <= dataFimMes;
-                        });
-                        break;
-                    case 'ano':
-                        const inicioAno = new Date(hoje.getFullYear(), 0, 1);
-                        const fimAno = new Date(hoje.getFullYear(), 11, 31);
-                        
-                        const dataInicioAno = inicioAno.toISOString().split('T')[0];
-                        const dataFimAno = fimAno.toISOString().split('T')[0];
-                        
-                        transacoesFiltradas = transacoesFiltradas.filter(t => {
-                            return t.data >= dataInicioAno && t.data <= dataFimAno;
-                        });
-                        break;
-                    case 'customizado':
-                        const dataInicial = document.getElementById('dataInicial').value;
-                        const dataFinal = document.getElementById('dataFinal').value;
-                        if (dataInicial && dataFinal) {
-                            transacoesFiltradas = transacoesFiltradas.filter(t => {
-                                return t.data >= dataInicial && t.data <= dataFinal;
-                            });
-                        }
-                        break;
-                }
+                transacoesFiltradas = filteredTransactions;
             }
             
-            // Aplicar busca por texto
             if (searchTerm) {
                 transacoesFiltradas = transacoesFiltradas.filter(t => 
                     t.descricao.toLowerCase().includes(searchTerm) ||
@@ -1053,7 +1075,6 @@
         function atualizarResumoCalculadoPeriodo() {
             const resumoDiv = document.getElementById('periodoResumo');
             
-            // Mostrar apenas quando não for "todos"
             if (filtroAtivo === 'todos') {
                 resumoDiv.style.display = 'none';
                 return;
@@ -1061,7 +1082,6 @@
             
             resumoDiv.style.display = 'block';
             
-            // Calcular totais do período filtrado
             let totalEntradas = 0;
             let totalSaidas = 0;
             let totalTransacoes = filteredTransactions.length;
@@ -1076,13 +1096,11 @@
             
             const saldo = totalEntradas - totalSaidas;
             
-            // Atualizar valores na interface
             document.getElementById('periodoEntradas').textContent = formatarMoeda(totalEntradas);
             document.getElementById('periodoSaidas').textContent = formatarMoeda(totalSaidas);
             document.getElementById('periodoSaldo').textContent = formatarMoeda(saldo);
             document.getElementById('periodoTransacoes').textContent = totalTransacoes;
             
-            // Adicionar classe de cor ao saldo
             const saldoCard = document.getElementById('periodoSaldoCard');
             saldoCard.classList.remove('positivo', 'negativo');
             if (saldo > 0) {
@@ -1136,7 +1154,6 @@
                 return;
             }
 
-            // Calcular valor atual baseado em entradas
             const totalEntradas = filteredTransactions
                 .filter(t => t.tipo === 'entrada')
                 .reduce((sum, t) => sum + t.valor, 0);
@@ -1206,7 +1223,6 @@
                 return;
             }
 
-            // Calcular gastos por categoria no mês atual
             const hoje = new Date();
             const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
             const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
@@ -1254,7 +1270,267 @@
             }
         }
 
-        // ===== EXPORTAR PDF =====
+        // ===== ANÁLISE DE FORMAS DE PAGAMENTO =====
+        function atualizarAnaliseFormasPagamento() {
+            calcularEstatisticasPagamento();
+            renderizarCardsPagamento();
+            renderizarTabelaPagamento();
+            renderizarGraficoComparacao();
+        }
+
+        function calcularEstatisticasPagamento() {
+            const formasPagamento = {
+                'Dinheiro': { total: 0, count: 0, icon: '💵', class: 'dinheiro' },
+                'PIX': { total: 0, count: 0, icon: '📱', class: 'pix' },
+                'Débito': { total: 0, count: 0, icon: '💳', class: 'debito' },
+                'Crédito': { total: 0, count: 0, icon: '💳', class: 'credito' },
+                'Crediário': { total: 0, count: 0, icon: '📋', class: 'crediario' }
+            };
+
+            let totalGeral = 0;
+
+            filteredTransactions.forEach(trans => {
+                const forma = trans.formaPagamento || 'Dinheiro';
+                if (formasPagamento[forma]) {
+                    formasPagamento[forma].total += trans.valor;
+                    formasPagamento[forma].count++;
+                    totalGeral += trans.valor;
+                }
+            });
+
+            // Calcular porcentagens
+            Object.keys(formasPagamento).forEach(forma => {
+                const dados = formasPagamento[forma];
+                dados.percentage = totalGeral > 0 ? (dados.total / totalGeral * 100) : 0;
+                dados.avgTicket = dados.count > 0 ? dados.total / dados.count : 0;
+            });
+
+            return { formasPagamento, totalGeral };
+        }
+
+        function renderizarCardsPagamento() {
+            const { formasPagamento, totalGeral } = calcularEstatisticasPagamento();
+            const container = document.getElementById('paymentCardsGrid');
+
+            if (totalGeral === 0) {
+                container.innerHTML = '<div class="column is-12"><p class="has-text-centered has-text-grey">Nenhuma transação para analisar</p></div>';
+                return;
+            }
+
+            const ordenado = Object.entries(formasPagamento)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            container.innerHTML = ordenado.map(([nome, dados]) => {
+                if (dados.count === 0) return '';
+                
+                return `
+                    <div class="payment-method-card ${dados.class}">
+                        <div class="payment-icon">${dados.icon}</div>
+                        <div class="payment-name">${nome}</div>
+                        <div class="payment-amount">${formatarMoeda(dados.total)}</div>
+                        <div class="payment-percentage">
+                            <i class="fas fa-chart-pie"></i> ${dados.percentage.toFixed(1)}% do total
+                        </div>
+                        <div class="payment-count">
+                            <i class="fas fa-list"></i> ${dados.count} transação${dados.count !== 1 ? 'ões' : ''}
+                        </div>
+                        <div class="payment-count mt-1">
+                            <i class="fas fa-ticket-alt"></i> Ticket médio: ${formatarMoeda(dados.avgTicket)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderizarTabelaPagamento() {
+            const { formasPagamento } = calcularEstatisticasPagamento();
+            const container = document.getElementById('paymentStatsTable');
+
+            const ordenado = Object.entries(formasPagamento)
+                .filter(([nome, dados]) => dados.count > 0)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            if (ordenado.length === 0) {
+                container.innerHTML = '<p class="has-text-centered has-text-grey">Nenhuma transação para analisar</p>';
+                return;
+            }
+
+            container.innerHTML = ordenado.map(([nome, dados], index) => {
+                const rankingClass = index === 0 ? 'first' : index === 1 ? 'second' : index === 2 ? 'third' : '';
+                const rankingText = index === 0 ? '🥇 1º' : index === 1 ? '🥈 2º' : index === 2 ? '🥉 3º' : `${index + 1}º`;
+                
+                return `
+                    <div class="payment-stats-row">
+                        <div class="payment-stats-icon">${dados.icon}</div>
+                        <div class="payment-stats-info">
+                            <div class="payment-stats-name">
+                                ${nome}
+                                <span class="payment-ranking ${rankingClass}">${rankingText}</span>
+                            </div>
+                            <div class="payment-stats-details">
+                                ${dados.count} transação${dados.count !== 1 ? 'ões' : ''} • 
+                                Ticket médio: ${formatarMoeda(dados.avgTicket)}
+                            </div>
+                        </div>
+                        <div class="payment-stats-bar">
+                            <progress class="progress is-primary" value="${dados.percentage}" max="100">
+                                ${dados.percentage.toFixed(1)}%
+                            </progress>
+                        </div>
+                        <div class="payment-stats-value">
+                            ${formatarMoeda(dados.total)}
+                            <br>
+                            <small style="opacity: 0.8;">${dados.percentage.toFixed(1)}%</small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Atualizar estatísticas resumidas
+            if (ordenado.length > 0) {
+                const maisUsado = ordenado.reduce((a, b) => a[1].count > b[1].count ? a : b);
+                const maiorValor = ordenado[0];
+                const ticketMedio = ordenado.reduce((sum, [, dados]) => sum + dados.total, 0) / 
+                                   ordenado.reduce((sum, [, dados]) => sum + dados.count, 0);
+
+                document.getElementById('mostUsedPayment').innerHTML = `
+                    ${maisUsado[1].icon} ${maisUsado[0]}
+                    <br><small style="font-size: 0.6em; opacity: 0.8;">${maisUsado[1].count} transações</small>
+                `;
+                
+                document.getElementById('highestValuePayment').innerHTML = `
+                    ${maiorValor[1].icon} ${maiorValor[0]}
+                    <br><small style="font-size: 0.6em; opacity: 0.8;">${formatarMoeda(maiorValor[1].total)}</small>
+                `;
+                
+                document.getElementById('averageTicket').innerHTML = `
+                    ${formatarMoeda(ticketMedio)}
+                    <br><small style="font-size: 0.6em; opacity: 0.8;">por transação</small>
+                `;
+            }
+        }
+
+        function renderizarGraficoComparacao() {
+            const ctx = document.getElementById('paymentComparisonChart');
+            if (!ctx) return;
+
+            const { formasPagamento } = calcularEstatisticasPagamento();
+
+            const dados = Object.entries(formasPagamento)
+                .filter(([nome, dados]) => dados.count > 0)
+                .sort((a, b) => b[1].total - a[1].total);
+
+            if (paymentComparisonChart) {
+                paymentComparisonChart.destroy();
+            }
+
+            if (dados.length === 0) {
+                return;
+            }
+
+            const labels = dados.map(([nome]) => nome);
+            const valores = dados.map(([, dados]) => dados.total);
+            const contagens = dados.map(([, dados]) => dados.count);
+
+            const cores = {
+                'Dinheiro': '#4CAF50',
+                'PIX': '#2196F3',
+                'Débito': '#FF9800',
+                'Crédito': '#F44336',
+                'Crediário': '#9C27B0'
+            };
+
+            const backgroundColors = labels.map(label => cores[label] || '#757575');
+
+            paymentComparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Valor Total (R$)',
+                            data: valores,
+                            backgroundColor: backgroundColors,
+                            borderColor: backgroundColors,
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Quantidade de Transações',
+                            data: contagens,
+                            backgroundColor: 'rgba(102, 126, 234, 0.5)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 2,
+                            type: 'line',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 0) {
+                                        label += formatarMoeda(context.parsed.y);
+                                    } else {
+                                        label += context.parsed.y + ' transações';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toFixed(0);
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Valor Total (R$)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                stepSize: 1
+                            },
+                            title: {
+                                display: true,
+                                text: 'Quantidade'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         function exportarPDF() {
             if (transactions.length === 0) {
                 alert('Não há transações para exportar!');
@@ -1264,15 +1540,12 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Título
             doc.setFontSize(20);
             doc.text('Relatório Financeiro', 105, 15, { align: 'center' });
 
-            // Data do relatório
             doc.setFontSize(10);
             doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 105, 22, { align: 'center' });
 
-            // Resumo
             let totalEntradas = 0;
             let totalSaidas = 0;
             filteredTransactions.forEach(trans => {
@@ -1291,7 +1564,6 @@
             doc.text(`Total de Saídas: R$ ${totalSaidas.toFixed(2)}`, 14, 44);
             doc.text(`Saldo: R$ ${saldo.toFixed(2)}`, 14, 50);
 
-            // Tabela de transações
             const tableData = filteredTransactions.map(trans => [
                 formatarData(trans.data),
                 trans.tipo === 'entrada' ? 'Entrada' : 'Saída',
@@ -1313,7 +1585,6 @@
                 }
             });
 
-            // Salvar PDF
             doc.save(`relatorio_financeiro_${new Date().toISOString().split('T')[0]}.pdf`);
         }
     

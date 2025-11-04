@@ -63,28 +63,83 @@
                 <h3 class="title is-5 mb-4">
                     <i class="fas fa-filter"></i> Filtros por Período
                 </h3>
-                <div class="filter-buttons">
-                    <button class="button filter-btn is-active" onclick="filtrarPorPeriodo('todos')" id="btn-todos">
+                
+                <!-- Navegação de Período -->
+                <div class="periodo-navegacao">
+                    <button class="button is-small" onclick="navegarPeriodo(-1)" title="Período Anterior">
+                        <span class="icon">
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                    </button>
+                    <div class="periodo-atual" id="periodoAtualDisplay">
+                        Todos os Períodos
+                    </div>
+                    <button class="button is-small" onclick="navegarPeriodo(1)" title="Próximo Período">
+                        <span class="icon">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </button>
+                    <button class="button is-small is-info" onclick="filtrarPorPeriodo('hoje')" title="Voltar para Hoje">
+                        <span class="icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </span>
+                        <span>Hoje</span>
+                    </button>
+                </div>
+                
+                <!-- Filtros Rápidos -->
+                <div class="filtros-avancados">
+                    <button class="button filtro-periodo-btn is-active" onclick="filtrarPorPeriodo('todos')" id="btn-todos">
                         <span class="icon"><i class="fas fa-infinity"></i></span>
                         <span>Todos</span>
                     </button>
-                    <button class="button filter-btn" onclick="filtrarPorPeriodo('hoje')" id="btn-hoje">
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('hoje')" id="btn-hoje">
                         <span class="icon"><i class="fas fa-calendar-day"></i></span>
                         <span>Hoje</span>
                     </button>
-                    <button class="button filter-btn" onclick="filtrarPorPeriodo('semana')" id="btn-semana">
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('ontem')" id="btn-ontem">
+                        <span class="icon"><i class="fas fa-calendar-minus"></i></span>
+                        <span>Ontem</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('semana')" id="btn-semana">
                         <span class="icon"><i class="fas fa-calendar-week"></i></span>
-                        <span>Semana</span>
+                        <span>Esta Semana</span>
                     </button>
-                    <button class="button filter-btn" onclick="filtrarPorPeriodo('mes')" id="btn-mes">
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('semana-passada')" id="btn-semana-passada">
+                        <span class="icon"><i class="fas fa-calendar-week"></i></span>
+                        <span>Semana Passada</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('mes')" id="btn-mes">
                         <span class="icon"><i class="fas fa-calendar-alt"></i></span>
-                        <span>Mês</span>
+                        <span>Este Mês</span>
                     </button>
-                    <button class="button filter-btn" onclick="filtrarPorPeriodo('ano')" id="btn-ano">
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('mes-passado')" id="btn-mes-passado">
+                        <span class="icon"><i class="fas fa-calendar-alt"></i></span>
+                        <span>Mês Passado</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('ano')" id="btn-ano">
                         <span class="icon"><i class="fas fa-calendar"></i></span>
-                        <span>Ano</span>
+                        <span>Este Ano</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('ano-passado')" id="btn-ano-passado">
+                        <span class="icon"><i class="fas fa-calendar"></i></span>
+                        <span>Ano Passado</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('ultimos-7-dias')" id="btn-ultimos-7-dias">
+                        <span class="icon"><i class="fas fa-history"></i></span>
+                        <span>Últimos 7 Dias</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('ultimos-30-dias')" id="btn-ultimos-30-dias">
+                        <span class="icon"><i class="fas fa-history"></i></span>
+                        <span>Últimos 30 Dias</span>
+                    </button>
+                    <button class="button filtro-periodo-btn" onclick="filtrarPorPeriodo('ultimos-90-dias')" id="btn-ultimos-90-dias">
+                        <span class="icon"><i class="fas fa-history"></i></span>
+                        <span>Últimos 90 Dias</span>
                     </button>
                 </div>
+                
+                <!-- Data Customizada -->
                 <div class="date-inputs">
                     <div class="field">
                         <label class="label">Data Inicial</label>
@@ -99,6 +154,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div class="has-text-centered mt-3">
                     <span class="tag is-info is-light is-medium" id="periodoAtivo">
                         <i class="fas fa-info-circle"></i> &nbsp; Exibindo todas as transações
@@ -139,9 +195,31 @@
                 </div>
             </div>
 
-            <!-- Charts Dashboard -->
-            <div class="columns is-multiline mt-4">
-                <div class="column is-12-mobile is-6-tablet">
+            <!-- Mini Calendário -->
+            <div class="columns">
+                <div class="column is-12-mobile is-4-tablet">
+                    <div class="mini-calendario">
+                        <div class="calendario-header">
+                            <button class="button is-small" onclick="navegarCalendario(-1)">
+                                <span class="icon">
+                                    <i class="fas fa-chevron-left"></i>
+                                </span>
+                            </button>
+                            <div class="calendario-mes" id="calendarioMes">
+                                Janeiro 2025
+                            </div>
+                            <button class="button is-small" onclick="navegarCalendario(1)">
+                                <span class="icon">
+                                    <i class="fas fa-chevron-right"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div id="calendarioContainer"></div>
+                    </div>
+                </div>
+                
+                <!-- Charts Dashboard -->
+                <div class="column is-12-mobile is-8-tablet">
                     <div class="card">
                         <div class="card-content">
                             <h3 class="title is-5 has-text-centered">
@@ -153,6 +231,70 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Análise de Formas de Pagamento -->
+            <div class="payment-analysis-section">
+                <h3 class="title is-4 has-text-centered mb-4">
+                    <i class="fas fa-credit-card"></i> Análise de Formas de Pagamento
+                </h3>
+                
+                <!-- Cards de Formas de Pagamento -->
+                <div class="payment-cards-grid" id="paymentCardsGrid">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+                
+                <!-- Gráfico Comparativo -->
+                <div class="columns is-centered mt-5">
+                    <div class="column is-12-mobile is-10-tablet is-8-desktop">
+                        <div class="card">
+                            <div class="card-content">
+                                <h4 class="title is-5 has-text-centered">
+                                    <i class="fas fa-chart-bar"></i> Comparação de Uso
+                                </h4>
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="paymentComparisonChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabela Detalhada -->
+                <div class="payment-comparison-table mt-5">
+                    <h4 class="title is-5">
+                        <i class="fas fa-table"></i> Detalhamento por Forma de Pagamento
+                    </h4>
+                    <div id="paymentStatsTable">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Estatísticas Resumidas -->
+                <div class="columns is-multiline mt-4">
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                        <div class="box has-text-centered">
+                            <p class="heading">Forma Mais Utilizada</p>
+                            <p class="title is-4" id="mostUsedPayment">-</p>
+                        </div>
+                    </div>
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                        <div class="box has-text-centered">
+                            <p class="heading">Maior Volume Financeiro</p>
+                            <p class="title is-4" id="highestValuePayment">-</p>
+                        </div>
+                    </div>
+                    <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                        <div class="box has-text-centered">
+                            <p class="heading">Ticket Médio por Transação</p>
+                            <p class="title is-4" id="averageTicket">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- More Charts -->
+            <div class="columns is-multiline mt-4">
                 <div class="column is-12-mobile is-6-tablet">
                     <div class="card">
                         <div class="card-content">
@@ -161,18 +303,6 @@
                             </h3>
                             <div class="chart-container">
                                 <canvas id="typeChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="column is-12">
-                    <div class="card">
-                        <div class="card-content">
-                            <h3 class="title is-5 has-text-centered">
-                                <i class="fas fa-chart-pie"></i> Gastos por Categoria
-                            </h3>
-                            <div class="chart-container" style="height: 350px;">
-                                <canvas id="expenseChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -189,14 +319,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="column is-12-mobile is-6-tablet">
+                <div class="column is-12">
                     <div class="card">
                         <div class="card-content">
                             <h3 class="title is-5 has-text-centered">
-                                <i class="fas fa-chart-line"></i> Resumo do Período
+                                <i class="fas fa-chart-pie"></i> Gastos por Categoria
                             </h3>
-                            <div class="content" id="resumoPeriodo">
-                                <p class="has-text-centered">Selecione um período para ver o resumo</p>
+                            <div class="chart-container" style="height: 350px;">
+                                <canvas id="expenseChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -265,7 +395,7 @@
                                 <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarArquivo(event)">
                                 <button class="button is-danger" onclick="limparDados()">
                                     <span class="icon"><i class="fas fa-trash"></i></span>
-                                    <span>Limpar Tudo</span>
+                                    <span>Limpar</span>
                                 </button>
                             </div>
                         </div>
@@ -307,49 +437,22 @@
                     <h2 class="title is-4">
                         <i class="fas fa-list"></i> Transações
                     </h2>
-                    
-                    <!-- Selection Actions Bar -->
-                    <div class="selection-actions" id="selectionActions">
-                        <div class="selection-info">
-                            <span id="selectedCount">0</span> transação(ões) selecionada(s)
-                        </div>
-                        <button class="button is-danger" onclick="excluirSelecionados()">
-                            <span class="icon"><i class="fas fa-trash"></i></span>
-                            <span>Excluir Selecionados</span>
-                        </button>
-                        <button class="button is-light" onclick="desmarcarTodos()">
-                            <span class="icon"><i class="fas fa-times"></i></span>
-                            <span>Desmarcar Todos</span>
-                        </button>
-                    </div>
-
-                    <!-- Select All -->
-                    <div class="select-all-container" id="selectAllContainer" style="display: none;">
-                        <input type="checkbox" class="select-all-checkbox" id="selectAllCheckbox" onchange="selecionarTodos()">
-                        <label for="selectAllCheckbox" style="cursor: pointer; user-select: none;">
-                            <strong>Selecionar todas as transações visíveis</strong>
-                        </label>
-                    </div>
-
                     <div class="table-container">
                         <table class="table is-fullwidth is-striped is-hoverable">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">
-                                        <i class="fas fa-check-square"></i>
-                                    </th>
                                     <th>Data</th>
                                     <th>Descrição</th>
                                     <th>Categoria</th>
                                     <th>Pagamento</th>
                                     <th>Tipo</th>
                                     <th>Valor</th>
-                                    <th style="width: 80px;">Ações</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="transactionsTable">
                                 <tr>
-                                    <td colspan="8" class="has-text-centered">
+                                    <td colspan="7" class="has-text-centered">
                                         Nenhuma transação registrada
                                     </td>
                                 </tr>
